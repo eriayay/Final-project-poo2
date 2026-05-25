@@ -1,0 +1,14 @@
+# ─── k8s/kind-2nodes.yaml ────────────────────────────────────────────────────
+# Configuración de clúster kind con 2 nodos (1 control-plane + 1 worker)
+# Uso: kind create cluster --name tienda-cluster --config k8s/kind-2nodes.yaml
+# ─────────────────────────────────────────────────────────────────────────────
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    # Mapea el puerto 30080 del nodo al 30080 del host
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP
+  - role: worker

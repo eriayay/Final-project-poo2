@@ -1,0 +1,47 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# FASE 1 - Docker Compose
+# Despliega backend (Django/Gunicorn) + frontend (React/Nginx) en una sola máquina
+# La base de datos está en NeonDB (externa) — no se incluye postgres aquí
+# ═══════════════════════════════════════════════════════════════════════════════
+version: '3.8'
+
+services:
+
+  # ── Backend Django ──────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tienda_backend
+    # Toma las variables de entorno del .env del backend (DATABASE_URL, SECRET_KEY, etc.)
+    env_file:
+      - ./backend/.env
+    environment:
+      - DEBUG=False
+      - ALLOWED_HOSTS=*
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Frontend React (Nginx) ──────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tienda_frontend
+    ports:
+      - "80:80"        # Acceso en http://localhost
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+# ── Red interna ─────────────────────────────────────────────────────────────
+networks:
+  default:
+    name: tienda_net

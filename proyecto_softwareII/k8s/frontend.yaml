@@ -1,0 +1,50 @@
+# ─── k8s/frontend.yaml ───────────────────────────────────────────────────────
+# Deployment + Service del frontend React (servido por Nginx)
+# Nginx también actúa como reverse proxy de /api/ → backend:8000
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: default
+  labels:
+    app: frontend
+spec:
+  replicas: 1          # ← CAMBIA AQUÍ junto con el backend
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: proyecto_softwareii-frontend:latest   # nombre que le darás al build local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "25m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: default
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30080    # Accede en http://<IP_NODO>:30080
+  type: NodePort
